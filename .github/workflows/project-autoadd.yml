@@ -1,61 +1,65 @@
-name: Auto Assign to Projects
-
-on:
-  issues:
-    types: [opened, labeled]
-  pull_request:
-    types: [opened, labeled]
-
 jobs:
-  add_opened_to_inbox_board:
-    name: Add New Issue/PR to Terasology Inbox Board
-    if: github.event.action == 'opened'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add to inbox board
-        uses: actions/add-to-project@v0.3.0
-        with:
-          project-url: 'https://github.com/orgs/MovingBlocks/projects/26'
-          github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
   add_bug_labeled_to_bug_board:
+    if: 'contains(github.event.issue.labels.*.name, ''Type: Bug'') ||
+
+      contains(github.event.pull_request.labels.*.name, ''Type: Bug'')
+
+      '
     name: Assign bug report issues and pull requests to bug board backlog
-    if: |
-      contains(github.event.issue.labels.*.name, 'Type: Bug') ||
-      contains(github.event.pull_request.labels.*.name, 'Type: Bug')
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Add to bug board
-        uses: actions/add-to-project@v0.3.0
-        with:
-          project-url: 'https://github.com/orgs/MovingBlocks/projects/29'
-          github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
-  add_maintenance_to_stabilization_board:
-    name: Assign stabilization / refactoring / chore issues and pull requests to stabilization board backlog
-    if: |
-      github.event.action != 'opened' && 
-      ( contains(github.event.issue.labels.*.name, 'Type: Refactoring') ||
-      contains(github.event.pull_request.labels.*.name, 'Type: Refactoring') ||
-      contains(github.event.issue.labels.*.name, 'Type: Chore') ||
-      contains(github.event.pull_request.labels.*.name, 'Type: Chore') ||
-      contains(github.event.issue.labels.*.name, 'Topic: Stabilization') && !contains(github.event.issue.labels.*.name, 'Type: Bug') ||
-      contains(github.event.pull_request.labels.*.name, 'Topic: Stabilization') && !contains(github.event.pull_request.labels.*.name, 'Type: Bug') )
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add to stabilization board
-        uses: actions/add-to-project@v0.3.0
-        with:
-          project-url: 'https://github.com/orgs/MovingBlocks/projects/25'
-          github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
+    - continue-on-error: true
+      name: Add to bug board
+      uses: actions/add-to-project@v0.3.0
+      with:
+        github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
+        project-url: https://github.com/orgs/MovingBlocks/projects/29
   add_features_to_feature_board:
+    if: "github.event.action != 'opened' && \ncontains(github.event.issue.labels.*.name,\
+      \ 'Type: Improvement') && !contains(github.event.issue.labels.*.name, 'Topic:\
+      \ Stabilization') ||\ncontains(github.event.pull_request.labels.*.name, 'Type:\
+      \ Improvement') && !contains(github.event.pull_request.labels.*.name, 'Topic:\
+      \ Stabilization')\n"
     name: Assign improvement issues and pull requests to feature board backlog
-    if: |
-      github.event.action != 'opened' && 
-      contains(github.event.issue.labels.*.name, 'Type: Improvement') && !contains(github.event.issue.labels.*.name, 'Topic: Stabilization') ||
-      contains(github.event.pull_request.labels.*.name, 'Type: Improvement') && !contains(github.event.pull_request.labels.*.name, 'Topic: Stabilization')
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Add to feature board
-        uses: actions/add-to-project@v0.3.0
-        with:
-          project-url: 'https://github.com/orgs/MovingBlocks/projects/27'
-          github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
+    - continue-on-error: true
+      name: Add to feature board
+      uses: actions/add-to-project@v0.3.0
+      with:
+        github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
+        project-url: https://github.com/orgs/MovingBlocks/projects/27
+  add_maintenance_to_stabilization_board:
+    if: "github.event.action != 'opened' && \n( contains(github.event.issue.labels.*.name,\
+      \ 'Type: Refactoring') ||\ncontains(github.event.pull_request.labels.*.name,\
+      \ 'Type: Refactoring') ||\ncontains(github.event.issue.labels.*.name, 'Type:\
+      \ Chore') ||\ncontains(github.event.pull_request.labels.*.name, 'Type: Chore')\
+      \ ||\ncontains(github.event.issue.labels.*.name, 'Topic: Stabilization') &&\
+      \ !contains(github.event.issue.labels.*.name, 'Type: Bug') ||\ncontains(github.event.pull_request.labels.*.name,\
+      \ 'Topic: Stabilization') && !contains(github.event.pull_request.labels.*.name,\
+      \ 'Type: Bug') )\n"
+    name: Assign stabilization / refactoring / chore issues and pull requests to stabilization
+      board backlog
+    runs-on: self-hosted
+    steps:
+    - continue-on-error: true
+      name: Add to stabilization board
+      uses: actions/add-to-project@v0.3.0
+      with:
+        github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
+        project-url: https://github.com/orgs/MovingBlocks/projects/25
+  add_opened_to_inbox_board:
+    if: github.event.action == 'opened'
+    name: Add New Issue/PR to Terasology Inbox Board
+    runs-on: self-hosted
+    steps:
+    - continue-on-error: true
+      name: Add to inbox board
+      uses: actions/add-to-project@v0.3.0
+      with:
+        github-token: ${{ secrets.PROJECT_GITHUB_TOKEN }}
+        project-url: https://github.com/orgs/MovingBlocks/projects/26
+name: Auto Assign to Projects
+on:
+  repository_dispatch:
+    types: trigger-ga___project-autoadd.yml
